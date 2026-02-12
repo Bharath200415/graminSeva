@@ -4,10 +4,21 @@ const Technician = require('../models/Technician');
 // Create new complaint
 exports.createComplaint = async (req, res) => {
   try {
-    const { category, description, location, citizenPhone, citizenName, priority } = req.body;
+    const { category, description, citizenName, priority } = req.body;
+
+    const rawLocation = req.body.location || {};
+    const location = {
+      address: rawLocation.address || req.body['location[address]'] || '',
+      latitude: rawLocation.latitude ?? req.body['location[latitude]'],
+      longitude: rawLocation.longitude ?? req.body['location[longitude]']
+    };
+
+    const citizenPhone = req.user?.role === 'citizen'
+      ? req.user.phone
+      : req.body.citizenPhone;
 
     // Validate required fields
-    if (!category || !description || !location || !citizenPhone) {
+    if (!category || !description || !citizenPhone || location.latitude == null || location.longitude == null) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
 

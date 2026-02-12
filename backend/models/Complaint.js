@@ -111,8 +111,8 @@ const complaintSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Auto-generate complaint ID
-complaintSchema.pre('save', async function(next) {
+// Auto-generate complaint ID (pre-validate so it runs before required check)
+complaintSchema.pre('validate', async function(next) {
   if (!this.complaintId) {
     const count = await this.constructor.countDocuments();
     const date = new Date();
