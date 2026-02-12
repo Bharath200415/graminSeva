@@ -117,7 +117,7 @@ rural-complaint-portal/
    
    Edit `.env` file:
    ```env
-   MONGODB_URI=mongodb://localhost:27017/rural_complaint_portal
+   MONGODB_URI=your_MongoDB_URI
    PORT=5000
    JWT_SECRET=your_super_secret_jwt_key_change_in_production
    TEST_OTP=123456
