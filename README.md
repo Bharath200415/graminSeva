@@ -112,7 +112,7 @@ rural-complaint-portal/
 
 3. **Configure environment variables**
    ```bash
-   cp .env.example .env
+   touch .env
    ```
    
    Edit `.env` file:
@@ -123,16 +123,7 @@ rural-complaint-portal/
    TEST_OTP=123456
    ```
 
-4. **Start MongoDB**
-   ```bash
-   # Using MongoDB service
-   sudo systemctl start mongod
-   
-   # Or using Docker
-   docker run -d -p 27017:27017 --name mongodb mongo:latest
-   ```
-
-5. **Start the backend server**
+4. **Start the backend server**
    ```bash
    npm start
    # or for development with auto-reload
