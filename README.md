@@ -1,4 +1,4 @@
-# Rural Complaint Portal
+# Gramin Seva
 
 A comprehensive, minimalistic complaint management system designed for rural India with MongoDB backend and React frontend.
 
