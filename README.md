@@ -1,4 +1,4 @@
-# Rural Complaint Portal
+# Gramin Seva
 
 A comprehensive, minimalistic complaint management system designed for rural India with MongoDB backend and React frontend.
 
@@ -112,27 +112,18 @@ rural-complaint-portal/
 
 3. **Configure environment variables**
    ```bash
-   cp .env.example .env
+   touch .env
    ```
    
    Edit `.env` file:
    ```env
-   MONGODB_URI=mongodb://localhost:27017/rural_complaint_portal
+   MONGODB_URI=your_MongoDB_URI
    PORT=5000
    JWT_SECRET=your_super_secret_jwt_key_change_in_production
    TEST_OTP=123456
    ```
 
-4. **Start MongoDB**
-   ```bash
-   # Using MongoDB service
-   sudo systemctl start mongod
-   
-   # Or using Docker
-   docker run -d -p 27017:27017 --name mongodb mongo:latest
-   ```
-
-5. **Start the backend server**
+4. **Start the backend server**
    ```bash
    npm start
    # or for development with auto-reload
