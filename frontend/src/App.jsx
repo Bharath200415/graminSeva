@@ -112,8 +112,8 @@ const StatusBadge = ({ status }) => {
     <span style={{
       display: 'inline-flex',
       alignItems: 'center',
-      padding: '4px 12px',
-      borderRadius: '9999px',
+      padding: '7px 20px',
+      borderRadius: '50px',
       fontSize: '14px',
       fontWeight: '500',
       backgroundColor: config.bg,
@@ -1263,7 +1263,7 @@ const Dashboard = () => {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
-                padding: '16px',
+                padding: '12px',
                 backgroundColor: '#F5F5F4',
                 borderRadius: '10px'
               }}>
