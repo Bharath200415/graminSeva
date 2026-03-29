@@ -34,6 +34,7 @@
   "citizen": {
     "issueTitle": "What's the issue?",
     "issueSubtitle": "Pick the category that best describes your complaint.",
+      "useCurrentLocation": "Use current location",
 
     "registerComplaint": "Register New Complaint",
     "fillDetails": "Fill in the details below to submit your complaint",
@@ -51,7 +52,7 @@
     "contactPlaceholder": "Enter your mobile number",
     "location": "Location Address",
     "locationPlaceholder": "Enter complaint location",
-    "uploadPhotos": "Upload Photos (Optional)",
+    "uploadPhotos": "Upload Photos",
     "clickUpload": "Click to upload images",
     "uptoImages": "Up to 5 images",
     "submitComplaint": "Submit Complaint",

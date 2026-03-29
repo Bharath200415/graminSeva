@@ -1005,7 +1005,10 @@ const Step2 = (
         type="tel"
         placeholder={t('citizen.contactPlaceholder')}
         value={formData.phone}
-        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+        onChange={(e) => {
+              const value = e.target.value.replace(/\D/g, ""); // remove non-digits
+    setFormData({ ...formData, phone: value });
+        }}
         icon={Phone}
         maxLength="10"
         required
@@ -1014,6 +1017,44 @@ const Step2 = (
   </div>
 );
   // ─── Step 3 — Location & Photos ───────────────────────────────────────────────
+const handleGetLocation = () => {
+  if (!navigator.geolocation) {
+    alert("Geolocation not supported");
+    return;
+  }
+
+  navigator.geolocation.getCurrentPosition(
+    async (position) => {
+      const { latitude, longitude } = position.coords;
+
+      try {
+        //geocoding using OpenStreetMap 
+        const res = await fetch(
+          `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`
+        );
+        const data = await res.json();
+
+        const address = data.display_name;
+
+        setFormData({
+          ...formData,
+          location: {
+            address,
+            latitude,
+            longitude,
+          },
+        });
+
+      } catch (err) {
+        console.error(err);
+        alert("Failed to fetch address");
+      }
+    },
+    (error) => {
+      alert("Location permission denied");
+    }
+  );
+};
 
 const Step3 = (
   <div style={styles.stepBody}>
@@ -1023,6 +1064,13 @@ const Step3 = (
     </div>
 
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+    <Button
+      variant="primary"
+      size="sm"
+      onClick={handleGetLocation}
+    >
+      📍 {t('citizen.useCurrentLocation')}
+    </Button>
       <Input
         label={t('citizen.location')}
         type="text"
@@ -1039,9 +1087,7 @@ const Step3 = (
       <div>
         <label style={styles.label}>
           {t('citizen.uploadPhotos')}{' '}
-          <span style={{ color: '#A8A29E', fontWeight: 400 }}>
-            ({t('common.optional')})
-          </span>
+
         </label>
 
         <input
