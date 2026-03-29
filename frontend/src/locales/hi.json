@@ -32,6 +32,8 @@
     "verifying": "सत्यापित किया जा रहा है..."
   },
   "citizen": {
+    "issueTitle": "समस्या क्या है?",
+    "issueSubtitle": "वह श्रेणी चुनें जो आपकी शिकायत का सबसे अच्छा वर्णन करती है।",
     "registerComplaint": "नई शिकायत दर्ज करें",
     "fillDetails": "अपनी शिकायत दर्ज करने के लिए नीचे विवरण भरें",
     "selectCategory": "श्रेणी चुनें",
@@ -60,7 +62,11 @@
     "myComplaints": "मेरी शिकायतें",
     "loadingComplaints": "शिकायतें लोड हो रही हैं...",
     "noComplaints": "कोई शिकायत नहीं मिली। होम पेज से एक नई शिकायत दर्ज करें।",
-    "viewDetails": "विवरण देखें"
+    "viewDetails": "विवरण देखें",
+  "detailsTitle": "हमें और बताएं",
+  "detailsSubtitle": "समस्या का वर्णन करें और अपना संपर्क नंबर साझा करें।",
+  "locationTitle": "यह कहाँ है और कैसा दिखता है?",
+  "locationSubtitle": "स्थान जोड़ें और वैकल्पिक रूप से फोटो संलग्न करें (अधिकतम 5)।"
   },
   "dashboard": {
     "overview": "डैशबोर्ड अवलोकन",
@@ -89,8 +95,11 @@
     "changeStatus": "स्थिति बदलें",
     "submitted": "दर्ज किया गया",
     "assigned": "सौंपा गया",
-    "inProgress": "प्रगति में",
+    "in-progress": "प्रगति में",
     "resolved": "हल हो गया",
+    "pending_verification": "सत्यापन लंबित",   
+    "closed": "बंद",                        
+    "reopened": "फिर से खोला गया", 
     "rejected": "अस्वीकृत"
   },
   "technicians": {
@@ -126,10 +135,19 @@
   },
   "common": {
     "category": "श्रेणी",
+    "back": "वापस",
+    "continue": "जारी रखें",
     "status": "स्थिति",
     "date": "तारीख",
     "assignedTo": "को सौंपा गया",
     "unassigned": "असाइन नहीं किया गया",
-    "specialization": "विशेषज्ञता"
-  }
+    "specialization": "विशेषज्ञता",
+ "optional": "वैकल्पिक"
+  },
+  "steps": {
+  "category": "श्रेणी",
+  "details": "विवरण",
+  "location": "स्थान",
+  "review": "समीक्षा"
+}
 }

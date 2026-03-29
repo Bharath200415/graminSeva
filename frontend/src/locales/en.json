@@ -32,6 +32,9 @@
     "verifying": "Verifying..."
   },
   "citizen": {
+    "issueTitle": "What's the issue?",
+    "issueSubtitle": "Pick the category that best describes your complaint.",
+
     "registerComplaint": "Register New Complaint",
     "fillDetails": "Fill in the details below to submit your complaint",
     "selectCategory": "Select Category",
@@ -60,7 +63,11 @@
     "myComplaints": "My Complaints",
     "loadingComplaints": "Loading complaints...",
     "noComplaints": "No complaints found. Submit a new complaint from the Home page.",
-    "viewDetails": "View Details"
+    "viewDetails": "View Details",
+  "detailsTitle": "Tell us more",
+  "detailsSubtitle": "Describe the problem and share your contact number.",
+  "locationTitle": "Where & what does it look like?",
+  "locationSubtitle": "Add the location and optionally attach photos (up to 5)."
   },
   "dashboard": {
     "overview": "Dashboard Overview",
@@ -89,8 +96,10 @@
     "changeStatus": "Change Status",
     "submitted": "Submitted",
     "assigned": "Assigned",
-    "inProgress": "In Progress",
+    "in-progress": "In Progress",
     "resolved": "Resolved",
+    "pending_verification": "Pending Verification",
+    "closed": "Closed",
     "rejected": "Rejected"
   },
   "technicians": {
@@ -129,7 +138,16 @@
     "status": "Status",
     "date": "Date",
     "assignedTo": "Assigned to",
+    "back": "Back",
+    "continue": "Continue",
+ "optional": "optional",
     "unassigned": "Unassigned",
     "specialization": "Specialization"
-  }
+  },
+  "steps": {
+  "category": "Category",
+  "details": "Details",
+  "location": "Location",
+  "review": "Review"
+}
 }

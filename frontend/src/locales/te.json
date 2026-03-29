@@ -60,7 +60,12 @@
     "myComplaints": "నా ఫిర్యాదులు",
     "loadingComplaints": "ఫిర్యాదులు లోడ్ అవుతున్నాయి...",
     "noComplaints": "ఫిర్యాదులు కనుగొనబడలేదు. హోమ్ పేజీ నుండి కొత్త ఫిర్యాదును సమర్పించండి.",
-    "viewDetails": "వివరాలను చూడండి"
+    "viewDetails": "వివరాలను చూడండి",
+  "locationTitle": "ఇది ఎక్కడ ఉంది మరియు ఎలా కనిపిస్తోంది?",
+  "locationSubtitle": "స్థానాన్ని జోడించండి మరియు అవసరమైతే ఫోటోలు అప్‌లోడ్ చేయండి (గరిష్టంగా 5).",
+  "detailsTitle": "మాకు మరింత చెప్పండి",
+  "detailsSubtitle": "సమస్యను వివరించండి మరియు మీ సంప్రదింపు నంబర్‌ను పంచుకోండి."
+
   },
   "dashboard": {
     "overview": "డాష్‌బోర్డ్ అవలోకనం",
@@ -71,28 +76,33 @@
     "recentComplaints": "ఇటీవలి ఫిర్యాదులు",
     "noComplaints": "ఇంకా ఫిర్యాదులు లేవు."
   },
-  "complaints": {
-    "allComplaints": "అన్ని ఫిర్యాదులు",
-    "loadingComplaints": "ఫిర్యాదులు లోడ్ అవుతున్నాయి...",
-    "noComplaints": "ఫిర్యాదులు కనుగొనబడలేదు.",
-    "assignTechnician": "సాంకేతిక నిపుణుని కేటాయించండి",
-    "assignTo": "{{name}} కి కేటాయించండి",
-    "filterByCategory": "వర్గం ద్వారా ఫిల్టర్ చేయండి",
-    "allCategories": "అన్ని వర్గాలు",
-    "assigningTechnician": "సాంకేతిక నిపుణుని కేటాయించడం",
-    "selectTechnician": "ఈ ఫిర్యాదును కేటాయించడానికి ఒక సాంకేతిక నిపుణుడిని ఎంచుకోండి",
-    "specialization": "నైపుణ్యం:",
-    "availableTechnicians": "అందుబాటులో ఉన్న సాంకేతిక నిపుణులు",
-    "cancel": "రద్దు చేయండి",
-    "assign": "కేటాయించండి",
-    "assigning": "కేటాయించబడుతోంది...",
-    "changeStatus": "స్థితిని మార్చండి",
-    "submitted": "సమర్పించబడింది",
-    "assigned": "కేటాయించబడింది",
-    "inProgress": "ప్రగతిలో ఉంది",
-    "resolved": "పరిష్కరించబడింది",
-    "rejected": "తిరస్కరించబడింది"
-  },
+"complaints": {
+  "allComplaints": "అన్ని ఫిర్యాదులు",
+  "loadingComplaints": "ఫిర్యాదులు లోడ్ అవుతున్నాయి...",
+  "noComplaints": "ఫిర్యాదులు కనుగొనబడలేదు.",
+  "assignTechnician": "సాంకేతిక నిపుణుని కేటాయించండి",
+  "assignTo": "{{name}} కి కేటాయించండి",
+  "filterByCategory": "వర్గం ద్వారా ఫిల్టర్ చేయండి",
+  "allCategories": "అన్ని వర్గాలు",
+  "assigningTechnician": "సాంకేతిక నిపుణుని కేటాయించడం",
+  "selectTechnician": "ఈ ఫిర్యాదును కేటాయించడానికి ఒక సాంకేతిక నిపుణుడిని ఎంచుకోండి",
+  "specialization": "నైపుణ్యం:",
+  "availableTechnicians": "అందుబాటులో ఉన్న సాంకేతిక నిపుణులు",
+  "cancel": "రద్దు చేయండి",
+  "assign": "కేటాయించండి",
+  "assigning": "కేటాయించబడుతోంది...",
+  "changeStatus": "స్థితిని మార్చండి",
+
+  "submitted": "సమర్పించబడింది",
+  "assigned": "కేటాయించబడింది",
+  "in-progress": "ప్రగతిలో ఉంది",
+  "pending_verification": "ధృవీకరణ కోసం వేచి ఉంది", 
+  "closed": "మూసివేయబడింది",
+  "reopened": "మళ్లీ తెరవబడింది",
+
+  "resolved": "పరిష్కరించబడింది",
+  "rejected": "తిరస్కరించబడింది"
+},
   "technicians": {
     "manageTechnicians": "సాంకేతిక నిపుణులను నిర్వహించండి",
     "addNewTechnician": "కొత్త సాంకేతిక నిపుణుడిని చేర్చండి",
@@ -130,6 +140,14 @@
     "date": "తేదీ",
     "assignedTo": "కి కేటాయించబడింది",
     "unassigned": "కేటాయించబడలేదు",
-    "specialization": "నైపుణ్యం"
-  }
+    "specialization": "నైపుణ్యం",
+    "back": "వెనక్కి",
+    "continue": "కొనసాగించండి"
+  },
+"steps": {
+  "category": "వర్గం",
+  "details": "వివరాలు",
+  "location": "స్థానం",
+  "review": "సమీక్ష"
+}
 }

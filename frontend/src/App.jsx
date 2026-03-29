@@ -98,34 +98,38 @@ const categoryIcons = {
 };
 
 // ==================== REUSABLE COMPONENTS ====================
-const StatusBadge = ({ status }) => {
+const StatusBadge = ({ status, label }) => {
   const statusConfig = {
-    submitted: { bg: '#FEF3C7', text: '#92400E', label: 'Submitted' },
-    assigned: { bg: '#DBEAFE', text: '#1E3A8A', label: 'Assigned' },
-    'in-progress': { bg: '#FED7AA', text: '#9A3412', label: 'In Progress' },
-    resolved: { bg: '#D1FAE5', text: '#065F46', label: 'Resolved' },
-    rejected: { bg: '#FEE2E2', text: '#991B1B', label: 'Rejected' },
-    closed: { bg: '#D1FAE5', text: '#065F46', label: 'Closed' }, 
+    submitted: { bg: '#FEF3C7', text: '#92400E' },
+    assigned: { bg: '#DBEAFE', text: '#1E3A8A' },
+    'in-progress': { bg: '#FED7AA', text: '#9A3412' },
+    pending_verification: { bg: '#EDE9FE', text: '#5B21B6' },
+    closed: { bg: '#D1FAE5', text: '#065F46' },
+    reopened: { bg: '#FEE2E2', text: '#991B1B' },
   };
 
-  const config = statusConfig[status] || statusConfig.submitted;
+  const config = statusConfig[status] || {
+    bg: '#E5E7EB',
+    text: '#374151',
+  };
 
   return (
-    <span style={{
-      display: 'inline-flex',
-      alignItems: 'center',
-      padding: '7px 20px',
-      borderRadius: '50px',
-      fontSize: '14px',
-      fontWeight: '500',
-      backgroundColor: config.bg,
-      color: config.text
-    }}>
-      {config.label}
+    <span
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        padding: '7px 20px',
+        borderRadius: '50px',
+        fontSize: '14px',
+        fontWeight: '500',
+        backgroundColor: config.bg,
+        color: config.text,
+      }}
+    >
+      {label || status}
     </span>
   );
 };
-
 const Button = ({ children, variant = 'primary', size = 'md', icon: Icon, onClick, disabled, type = 'button', style = {}, ...props }) => {
   const variants = {
     primary: { backgroundColor: '#2B5A3D', color: 'white', border: 'none' },
@@ -304,8 +308,9 @@ const LoginPage = () => {
   return (
     <div style={{
       minHeight: '100vh',
-      background: 'linear-gradient(135deg, #2B5A3D 0%, #1F4029 100%)',
+      backgroundImage:"url('https://terralingua.org/wp-content/uploads/2020/08/Langscape-Magazine_Borde_01.jpg')",
       display: 'flex',
+       backgroundSize: "cover",
       alignItems: 'center',
       justifyContent: 'center',
       padding: '16px'
@@ -475,6 +480,7 @@ const Navbar = ({ activePage, setActivePage }) => {
       { id: 'reports', label: t('nav.reports'), icon: BarChart3 },
     ],
   };
+ 
 
   const navItems = navigation[user?.role] || navigation.citizen;
 
@@ -505,7 +511,9 @@ const Navbar = ({ activePage, setActivePage }) => {
             }}>
               <FileText size={24} color="white" />
             </div>
-            <span style={{ fontSize: '18px', fontWeight: 'bold' }}>Gramin Seva</span>
+            <span style={{ fontSize: '18px', fontWeight: 'bold' }}>
+                {t('app.name')}
+            </span>
           </div>
 
           {/* Desktop Navigation */}
@@ -781,10 +789,10 @@ const CitizenHome = ({ setActivePage }) => {
   ];
  
   const stepMeta = [
-    { label: 'Category',  icon: LayoutGrid },
-    { label: 'Details',   icon: FileText },
-    { label: 'Location',  icon: MapPin },
-    { label: 'Review',    icon: CheckCircle },
+    { label: t('steps.category'),  icon: LayoutGrid },
+    { label: t('steps.details'),   icon: FileText },
+    { label: t('steps.location'),  icon: MapPin },
+    { label: t('steps.review'),    icon: CheckCircle },
   ];
  
   const goNext = () => {
@@ -884,7 +892,7 @@ const CitizenHome = ({ setActivePage }) => {
                   backgroundColor: isDone ? '#2B5A3D' : isActive ? '#2B5A3D' : 'white',
                   border: `2px solid ${isActive || isDone ? '#2B5A3D' : '#D6D3D1'}`,
                   color: isActive || isDone ? 'white' : '#A8A29E',
-                  transform: isActive ? 'scale(1.15)' : 'scale(1)',
+                  transform: isActive ? 'scale(1.35)' : 'scale(1.25)',
                   boxShadow: isActive ? '0 0 0 4px rgba(43,90,61,0.15)' : 'none',
                 }}>
                   {isDone ? <Check size={14} /> : <Icon size={14} />}
@@ -917,8 +925,8 @@ const CitizenHome = ({ setActivePage }) => {
   const Step1 =  (
     <div style={styles.stepBody}>
       <div style={styles.stepHeading}>
-        <h2 style={styles.stepTitle}>What's the issue?</h2>
-        <p style={styles.stepSubtitle}>Pick the category that best describes your complaint.</p>
+        <h2>{t('citizen.issueTitle')}</h2>
+        <p>{t('citizen.issueSubtitle')}</p>
       </div>
       <div style={styles.categoryGrid}>
         {categories.map((cat) => {
@@ -963,91 +971,147 @@ const CitizenHome = ({ setActivePage }) => {
   );
  
   // ─── Step 2 — Details ─────────────────────────────────────────────────────────
-  const Step2 = (
-    <div style={styles.stepBody}>
-      <div style={styles.stepHeading}>
-        <h2 style={styles.stepTitle}>Tell us more</h2>
-        <p style={styles.stepSubtitle}>Describe the problem and share your contact number.</p>
-      </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
-        <div>
-          <label style={styles.label}>{t('citizen.description')}</label>
-          <textarea
-            value={formData.description}
-            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-            placeholder={t('citizen.descriptionPlaceholder')}
-            required
-            style={styles.textarea}
-            onFocus={(e) => { e.target.style.borderColor = '#2B5A3D'; e.target.style.boxShadow = '0 0 0 3px rgba(43,90,61,0.1)'; }}
-            onBlur={(e)  => { e.target.style.borderColor = '#E7E5E4'; e.target.style.boxShadow = 'none'; }}
-          />
-        </div>
-        <Input
-          label={t('citizen.contactNumber')}
-          type="tel"
-          placeholder={t('citizen.contactPlaceholder')}
-          value={formData.phone}
-          onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-          icon={Phone}
-          maxLength="10"
+
+
+const Step2 = (
+  <div style={styles.stepBody}>
+    <div style={styles.stepHeading}>
+      <h2 style={styles.stepTitle}>{t('citizen.detailsTitle')}</h2>
+      <p style={styles.stepSubtitle}>{t('citizen.detailsSubtitle')}</p>
+    </div>
+
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+      <div>
+        <label style={styles.label}>{t('citizen.description')}</label>
+        <textarea
+          value={formData.description}
+          onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+          placeholder={t('citizen.descriptionPlaceholder')}
           required
+          style={styles.textarea}
+          onFocus={(e) => {
+            e.target.style.borderColor = '#2B5A3D';
+            e.target.style.boxShadow = '0 0 0 3px rgba(43,90,61,0.1)';
+          }}
+          onBlur={(e) => {
+            e.target.style.borderColor = '#E7E5E4';
+            e.target.style.boxShadow = 'none';
+          }}
         />
       </div>
+
+      <Input
+        label={t('citizen.contactNumber')}
+        type="tel"
+        placeholder={t('citizen.contactPlaceholder')}
+        value={formData.phone}
+        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+        icon={Phone}
+        maxLength="10"
+        required
+      />
     </div>
-  );
- 
+  </div>
+);
   // ─── Step 3 — Location & Photos ───────────────────────────────────────────────
-  const Step3 = (
-    <div style={styles.stepBody}>
-      <div style={styles.stepHeading}>
-        <h2 style={styles.stepTitle}>Where & what does it look like?</h2>
-        <p style={styles.stepSubtitle}>Add the location and optionally attach photos (up to 5).</p>
-      </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-        <Input
-          label={t('citizen.location')}
-          type="text"
-          placeholder={t('citizen.locationPlaceholder')}
-          value={formData.location.address}
-          onChange={(e) => setFormData({ ...formData, location: { address: e.target.value } })}
-          icon={MapPin}
-          required
+
+const Step3 = (
+  <div style={styles.stepBody}>
+    <div style={styles.stepHeading}>
+      <h2 style={styles.stepTitle}>{t('citizen.locationTitle')}</h2>
+      <p style={styles.stepSubtitle}>{t('citizen.locationSubtitle')}</p>
+    </div>
+
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+      <Input
+        label={t('citizen.location')}
+        type="text"
+        placeholder={t('citizen.locationPlaceholder')}
+        value={formData.location.address}
+        onChange={(e) =>
+          setFormData({ ...formData, location: { address: e.target.value } })
+        }
+        icon={MapPin}
+        required
+      />
+
+      {/* Photo upload */}
+      <div>
+        <label style={styles.label}>
+          {t('citizen.uploadPhotos')}{' '}
+          <span style={{ color: '#A8A29E', fontWeight: 400 }}>
+            ({t('common.optional')})
+          </span>
+        </label>
+
+        <input
+          type="file"
+          accept="image/*"
+          multiple
+          onChange={handleImageChange}
+          style={{ display: 'none' }}
+          id="image-upload"
         />
- 
-        {/* Photo upload */}
-        <div>
-          <label style={styles.label}>{t('citizen.uploadPhotos')} <span style={{ color: '#A8A29E', fontWeight: 400 }}>(optional)</span></label>
-          <input type="file" accept="image/*" multiple onChange={handleImageChange} style={{ display: 'none' }} id="image-upload" />
-          <label
-            htmlFor="image-upload"
-            style={styles.uploadZone}
-            onMouseEnter={(e) => e.currentTarget.style.borderColor = '#2B5A3D'}
-            onMouseLeave={(e) => e.currentTarget.style.borderColor = '#D6D3D1'}
+
+        <label
+          htmlFor="image-upload"
+          style={styles.uploadZone}
+          onMouseEnter={(e) =>
+            (e.currentTarget.style.borderColor = '#2B5A3D')
+          }
+          onMouseLeave={(e) =>
+            (e.currentTarget.style.borderColor = '#D6D3D1')
+          }
+        >
+          <Camera size={32} color="#A8A29E" style={{ marginBottom: 8 }} />
+          <p
+            style={{
+              fontSize: 13,
+              fontWeight: 500,
+              margin: '0 0 2px',
+              color: '#57534E',
+            }}
           >
-            <Camera size={32} color="#A8A29E" style={{ marginBottom: 8 }} />
-            <p style={{ fontSize: 13, fontWeight: 500, margin: '0 0 2px', color: '#57534E' }}>{t('citizen.clickUpload')}</p>
-            <p style={{ fontSize: 11, color: '#A8A29E', margin: 0 }}>{t('citizen.uptoImages')}</p>
-          </label>
-          {images.length > 0 && (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8, marginTop: 12 }}>
-              {images.map((img, idx) => (
-                <div key={idx} style={styles.thumbWrap}>
-                  <img src={URL.createObjectURL(img)} alt={`Upload ${idx + 1}`} style={styles.thumb} />
-                  <button
-                    type="button"
-                    onClick={() => setImages(images.filter((_, i) => i !== idx))}
-                    style={styles.thumbRemove}
-                  >
-                    <X size={12} />
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+            {t('citizen.clickUpload')}
+          </p>
+          <p style={{ fontSize: 11, color: '#A8A29E', margin: 0 }}>
+            {t('citizen.uptoImages')}
+          </p>
+        </label>
+
+        {images.length > 0 && (
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(4, 1fr)',
+              gap: 8,
+              marginTop: 12,
+            }}
+          >
+            {images.map((img, idx) => (
+              <div key={idx} style={styles.thumbWrap}>
+                <img
+                  src={URL.createObjectURL(img)}
+                  alt={`Upload ${idx + 1}`}
+                  style={styles.thumb}
+                />
+                <button
+                  type="button"
+                  onClick={() =>
+                    setImages(images.filter((_, i) => i !== idx))
+                  }
+                  style={styles.thumbRemove}
+                >
+                  <X size={12} />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
-  );
+  </div>
+);
  
 // ─── Step 4 — Review ──────────────────────────────────────────────────────────
   const cat = categories.find((c) => c.id === formData.category);
@@ -1151,8 +1215,13 @@ const CitizenHome = ({ setActivePage }) => {
         {/* Navigation */}
         <div style={styles.navRow}>
           {step > 1 ? (
-            <Button variant="outline" size="md" icon={ChevronLeft} onClick={goBack}>
-              Back
+            <Button
+              variant="outline"
+              size="md"
+              icon={ChevronLeft}
+              onClick={goBack}
+            >
+              {t('common.back')}
             </Button>
           ) : <div />}
 
@@ -1164,7 +1233,7 @@ const CitizenHome = ({ setActivePage }) => {
               onClick={goNext}
               style={{ display: 'flex', alignItems: 'center', gap: 6 }}
             >
-              Continue <ChevronRight size={16} />
+              {t('common.continue')} <ChevronRight size={16} />
             </Button>
           ) : (
             <Button
@@ -1471,10 +1540,10 @@ const CitizenComplaints = () => {
                         <div>
                           <h3 style={{ fontSize: '18px', fontWeight: '600', margin: '0 0 4px 0' }}>{complaint.complaintId}</h3>
                           <p style={{ fontSize: '14px', color: '#78716C', textTransform: 'capitalize', margin: 0 }}>
-                            {complaint.category} • {complaint.location.address}
+                            {t(`citizen.${complaint.category}`)} • {complaint.location.address}
                           </p>
                         </div>
-                        <StatusBadge status={complaint.status} />
+                        <StatusBadge status={complaint.status} label={t(`complaints.${complaint.status}`)} />
                       </div>
                       <p style={{ color: '#57534E', margin: '0 0 12px 0' }}>{complaint.description}</p>
 
