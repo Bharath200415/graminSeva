@@ -6,18 +6,15 @@ exports.createComplaint = async (req, res) => {
   try {
     const { category, description, location, citizenPhone, citizenName, priority } = req.body;
 
-    // Validate required fields
     if (!category || !description || !location || !citizenPhone) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
-    // Process uploaded images
     const images = req.files ? req.files.map(file => ({
       url: `/uploads/${file.filename}`,
       filename: file.filename
     })) : [];
 
-    // Create complaint
     const complaint = new Complaint({
       category,
       description,
@@ -30,10 +27,7 @@ exports.createComplaint = async (req, res) => {
       citizenPhone,
       citizenName,
       priority: priority || 'medium',
-      statusHistory: [{
-        status: 'submitted',
-        changedBy: req.userId
-      }]
+      statusHistory: [{ status: 'submitted', changedBy: req.userId }]
     });
 
     await complaint.save();
@@ -51,19 +45,11 @@ exports.createComplaint = async (req, res) => {
 // Get all complaints with filters
 exports.getComplaints = async (req, res) => {
   try {
-    const { 
-      status, 
-      category, 
-      startDate, 
-      endDate, 
-      assignedTo,
-      page = 1,
-      limit = 20,
-      sortBy = 'createdAt',
-      sortOrder = 'desc'
+    const {
+      status, category, startDate, endDate, assignedTo,
+      page = 1, limit = 20, sortBy = 'createdAt', sortOrder = 'desc'
     } = req.query;
 
-    // Build filter
     const filter = {};
     if (status) filter.status = status;
     if (category) filter.category = category;
@@ -74,17 +60,13 @@ exports.getComplaints = async (req, res) => {
       if (endDate) filter.createdAt.$lte = new Date(endDate);
     }
 
-    // For citizens, only show their complaints
     if (req.user.role === 'citizen') {
       filter.citizenPhone = req.user.phone;
     }
 
-    // For technicians, show assigned complaints
     if (req.user.role === 'technician') {
       const technician = await Technician.findOne({ userId: req.userId });
-      if (technician) {
-        filter.assignedTo = technician._id;
-      }
+      if (technician) filter.assignedTo = technician._id;
     }
 
     const skip = (parseInt(page) - 1) * parseInt(limit);
@@ -118,9 +100,7 @@ exports.getComplaintById = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const complaint = await Complaint.findOne({
-      $or: [{ _id: id }, { complaintId: id }]
-    })
+    const complaint = await Complaint.findOne({ $or: [{ _id: id }, { complaintId: id }] })
       .populate('assignedTo', 'name phone specialization rating')
       .populate('internalNotes.addedBy', 'name role')
       .populate('statusHistory.changedBy', 'name role');
@@ -129,15 +109,11 @@ exports.getComplaintById = async (req, res) => {
       return res.status(404).json({ error: 'Complaint not found' });
     }
 
-    // Check access permissions
-    if (req.user.role === 'citizen' && complaint.citizenPhone !== req.user.phone) {
+    if (req.user?.role === 'citizen' && complaint.citizenPhone !== req.user.phone) {
       return res.status(403).json({ error: 'Access denied' });
     }
 
-    res.json({
-      success: true,
-      complaint
-    });
+    res.json({ success: true, complaint });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -150,52 +126,31 @@ exports.updateComplaintStatus = async (req, res) => {
     const { status, notes } = req.body;
 
     const complaint = await Complaint.findById(id);
+    if (!complaint) return res.status(404).json({ error: 'Complaint not found' });
 
-    if (!complaint) {
-      return res.status(404).json({ error: 'Complaint not found' });
-    }
-
-    // Update status
     complaint.status = status;
-    
-    // Add to status history
-    complaint.statusHistory.push({
-      status,
-      changedBy: req.userId
-    });
+    complaint.statusHistory.push({ status, changedBy: req.userId });
 
-    // Add notes if provided
     if (notes) {
-      complaint.internalNotes.push({
-        note: notes,
-        addedBy: req.userId
-      });
+      complaint.internalNotes.push({ note: notes, addedBy: req.userId });
     }
 
-    // If marking as resolved, set resolved date
-    if (status === 'resolved' && !complaint.resolvedAt) {
+    if (status === 'closed' && !complaint.resolvedAt) {
       complaint.resolvedAt = new Date();
     }
 
     await complaint.save();
 
-    // Update technician stats if resolved
-    if (status === 'resolved' && complaint.assignedTo) {
+    if (status === 'closed' && complaint.assignedTo) {
       const technician = await Technician.findById(complaint.assignedTo);
       if (technician) {
         technician.activeComplaints = Math.max(0, technician.activeComplaints - 1);
-        if (complaint.actualResolutionTime) {
-          technician.updateAvgResolutionTime(complaint.actualResolutionTime);
-        }
+        if (complaint.actualResolutionTime) technician.updateAvgResolutionTime(complaint.actualResolutionTime);
         await technician.save();
       }
     }
 
-    res.json({
-      success: true,
-      complaint,
-      message: 'Complaint status updated successfully'
-    });
+    res.json({ success: true, complaint, message: 'Status updated successfully' });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -205,107 +160,74 @@ exports.updateComplaintStatus = async (req, res) => {
 exports.assignComplaint = async (req, res) => {
   try {
     const { id } = req.params;
-    const { technicianId, estimatedResolutionTime, priority } = req.body;
+    const { technicianId, estimatedResolutionTime, priority, reason } = req.body;
 
     const complaint = await Complaint.findById(id);
-
-    if (!complaint) {
-      return res.status(404).json({ error: 'Complaint not found' });
-    }
+    if (!complaint) return res.status(404).json({ error: 'Complaint not found' });
 
     const technician = await Technician.findById(technicianId);
+    if (!technician) return res.status(404).json({ error: 'Technician not found' });
 
-    if (!technician) {
-      return res.status(404).json({ error: 'Technician not found' });
-    }
-
-    // Check if technician specialization matches
     if (!technician.specialization.includes(complaint.category)) {
-      return res.status(400).json({ 
-        error: `Technician specialization (${technician.specialization.join(', ')}) does not match complaint category (${complaint.category})` 
+      return res.status(400).json({
+        error: `Technician specialization (${technician.specialization.join(', ')}) does not match complaint category (${complaint.category})`
       });
     }
+
+    // Track reassignment history
+    complaint.assignmentHistory.push({
+      technician: technicianId,
+      assignedAt: new Date(),
+      reason: reason || 'Initial assignment'
+    });
 
     complaint.assignedTo = technicianId;
     complaint.assignedAt = new Date();
     complaint.status = 'assigned';
-    
-    if (estimatedResolutionTime) {
-      complaint.estimatedResolutionTime = new Date(estimatedResolutionTime);
-    }
-    
-    if (priority) {
-      complaint.priority = priority;
-    }
+    if (estimatedResolutionTime) complaint.estimatedResolutionTime = new Date(estimatedResolutionTime);
+    if (priority) complaint.priority = priority;
 
-    complaint.statusHistory.push({
-      status: 'assigned',
-      changedBy: req.userId
-    });
+    complaint.statusHistory.push({ status: 'assigned', changedBy: req.userId });
 
     await complaint.save();
 
-    // Update technician active complaints
     technician.activeComplaints += 1;
     await technician.save();
 
-    res.json({
-      success: true,
-      complaint,
-      message: 'Complaint assigned successfully'
-    });
+    res.json({ success: true, complaint, message: 'Complaint assigned successfully' });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
 
-// Add resolution (by technician)
+// Legacy resolve (kept for backward compat)
 exports.resolveComplaint = async (req, res) => {
   try {
     const { id } = req.params;
     const { resolutionNotes } = req.body;
 
     const complaint = await Complaint.findById(id);
+    if (!complaint) return res.status(404).json({ error: 'Complaint not found' });
 
-    if (!complaint) {
-      return res.status(404).json({ error: 'Complaint not found' });
-    }
-
-    // Process resolution images
     const resolutionImages = req.files ? req.files.map(file => ({
       url: `/uploads/${file.filename}`,
       filename: file.filename
     })) : [];
 
-    complaint.status = 'resolved';
-    complaint.resolvedAt = new Date();
+    complaint.status = 'pending_verification';
     complaint.resolutionNotes = resolutionNotes;
     complaint.resolutionImages = resolutionImages;
+    complaint.technicianResolution = {
+      note: resolutionNotes,
+      images: resolutionImages,
+      resolvedAt: new Date()
+    };
 
-    complaint.statusHistory.push({
-      status: 'resolved',
-      changedBy: req.userId
-    });
+    complaint.statusHistory.push({ status: 'pending_verification', changedBy: req.userId });
 
     await complaint.save();
 
-    // Update technician stats
-    if (complaint.assignedTo) {
-      const technician = await Technician.findById(complaint.assignedTo);
-      if (technician) {
-        technician.activeComplaints = Math.max(0, technician.activeComplaints - 1);
-        if (complaint.actualResolutionTime) {
-          technician.updateAvgResolutionTime(complaint.actualResolutionTime);
-        }
-        await technician.save();
-      }
-    }
-
-    res.json({
-      success: true,
-      complaint,
-      message: 'Complaint resolved successfully'
-    });
+    res.json({ success: true, complaint, message: 'Resolution submitted. Awaiting citizen verification.' });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -318,23 +240,12 @@ exports.addInternalNote = async (req, res) => {
     const { note } = req.body;
 
     const complaint = await Complaint.findById(id);
+    if (!complaint) return res.status(404).json({ error: 'Complaint not found' });
 
-    if (!complaint) {
-      return res.status(404).json({ error: 'Complaint not found' });
-    }
-
-    complaint.internalNotes.push({
-      note,
-      addedBy: req.userId
-    });
-
+    complaint.internalNotes.push({ note, addedBy: req.userId });
     await complaint.save();
 
-    res.json({
-      success: true,
-      complaint,
-      message: 'Note added successfully'
-    });
+    res.json({ success: true, complaint, message: 'Note added successfully' });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -357,29 +268,184 @@ exports.getComplaintStats = async (req, res) => {
       { $match: filter },
       {
         $facet: {
-          statusCount: [
-            { $group: { _id: '$status', count: { $sum: 1 } } }
-          ],
-          categoryCount: [
-            { $group: { _id: '$category', count: { $sum: 1 } } }
-          ],
-          priorityCount: [
-            { $group: { _id: '$priority', count: { $sum: 1 } } }
-          ],
+          statusCount: [{ $group: { _id: '$status', count: { $sum: 1 } } }],
+          categoryCount: [{ $group: { _id: '$category', count: { $sum: 1 } } }],
+          priorityCount: [{ $group: { _id: '$priority', count: { $sum: 1 } } }],
           avgResolutionTime: [
-            { $match: { status: 'resolved', actualResolutionTime: { $exists: true } } },
+            { $match: { status: 'closed', actualResolutionTime: { $exists: true } } },
             { $group: { _id: null, avg: { $avg: '$actualResolutionTime' } } }
           ],
-          totalComplaints: [
-            { $count: 'count' }
-          ]
+          totalComplaints: [{ $count: 'count' }]
         }
       }
     ]);
 
+    res.json({ success: true, stats: stats[0] });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// ─── Double-verification handlers ─────────────────────────────────────────────
+
+// Technician marks job done → status: pending_verification
+exports.technicianResolve = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { note } = req.body;
+
+    const complaint = await Complaint.findById(id);
+    if (!complaint) return res.status(404).json({ error: 'Complaint not found' });
+
+    if (!['in-progress', 'reopened'].includes(complaint.status)) {
+      return res.status(400).json({ error: 'Complaint must be in-progress or reopened to submit resolution' });
+    }
+
+    const images = req.files ? req.files.map(file => ({
+      url: `/uploads/${file.filename}`,
+      filename: file.filename
+    })) : [];
+
+    complaint.technicianResolution = {
+      note: note || '',
+      images,
+      resolvedAt: new Date()
+    };
+
+    complaint.status = 'pending_verification';
+    complaint.statusHistory.push({ status: 'pending_verification', changedBy: req.userId });
+
+    await complaint.save();
+
     res.json({
       success: true,
-      stats: stats[0]
+      complaint,
+      message: 'Resolution submitted. Citizen will now be asked to verify.'
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// Citizen confirms yes/no → recorded for admin review
+exports.citizenVerify = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { confirmed, note } = req.body;
+
+    if (confirmed === undefined) {
+      return res.status(400).json({ error: 'confirmed (true/false) is required' });
+    }
+
+    const complaint = await Complaint.findById(id);
+    if (!complaint) return res.status(404).json({ error: 'Complaint not found' });
+
+    if (complaint.status !== 'pending_verification') {
+      return res.status(400).json({ error: 'Complaint is not awaiting citizen verification' });
+    }
+
+    // Ensure citizen owns this complaint
+    if (complaint.citizenPhone !== req.user.phone) {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+
+    const images = req.files ? req.files.map(file => ({
+      url: `/uploads/${file.filename}`,
+      filename: file.filename
+    })) : [];
+
+    complaint.citizenVerification = {
+      confirmed: confirmed === 'true' || confirmed === true,
+      note: note || '',
+      images,
+      respondedAt: new Date()
+    };
+
+    complaint.statusHistory.push({ status: 'pending_verification', changedBy: req.userId });
+
+    await complaint.save();
+
+    res.json({
+      success: true,
+      complaint,
+      message: 'Verification submitted. Admin will review and close the complaint.'
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// Admin closes or re-assigns after reviewing both responses
+exports.adminClose = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { action, note, technicianId } = req.body;
+
+    if (!['closed', 'reassigned'].includes(action)) {
+      return res.status(400).json({ error: 'action must be "closed" or "reassigned"' });
+    }
+
+    const complaint = await Complaint.findById(id);
+    if (!complaint) return res.status(404).json({ error: 'Complaint not found' });
+
+    complaint.adminClosure = {
+      closedBy: req.userId,
+      action,
+      note: note || '',
+      actionAt: new Date()
+    };
+
+    if (action === 'closed') {
+      complaint.status = 'closed';
+      complaint.resolvedAt = new Date();
+
+      if (complaint.createdAt) {
+        const diffMs = complaint.resolvedAt - complaint.createdAt;
+        complaint.actualResolutionTime = Math.round(diffMs / (1000 * 60 * 60));
+      }
+
+      complaint.statusHistory.push({ status: 'closed', changedBy: req.userId });
+
+      // Update technician stats
+      if (complaint.assignedTo) {
+        const technician = await Technician.findById(complaint.assignedTo);
+        if (technician) {
+          technician.activeComplaints = Math.max(0, technician.activeComplaints - 1);
+          if (complaint.actualResolutionTime) technician.updateAvgResolutionTime(complaint.actualResolutionTime);
+          await technician.save();
+        }
+      }
+    } else {
+      // Reassign — reset verification fields so the flow restarts
+      complaint.status = 'reopened';
+      complaint.technicianResolution = undefined;
+      complaint.citizenVerification = undefined;
+
+      complaint.statusHistory.push({ status: 'reopened', changedBy: req.userId });
+
+      // Optionally reassign to a different technician in the same call
+      if (technicianId) {
+        const technician = await Technician.findById(technicianId);
+        if (technician) {
+          complaint.assignmentHistory.push({
+            technician: technicianId,
+            assignedAt: new Date(),
+            reason: note || 'Admin re-assigned after citizen reported unresolved'
+          });
+          complaint.assignedTo = technicianId;
+          complaint.assignedAt = new Date();
+          technician.activeComplaints += 1;
+          await technician.save();
+        }
+      }
+    }
+
+    await complaint.save();
+
+    res.json({
+      success: true,
+      complaint,
+      message: action === 'closed' ? 'Complaint closed successfully.' : 'Complaint reopened and reassigned.'
     });
   } catch (error) {
     res.status(500).json({ error: error.message });

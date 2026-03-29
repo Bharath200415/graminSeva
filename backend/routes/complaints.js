@@ -31,4 +31,15 @@ router.post('/:id/notes', auth, authorize('admin'), complaintController.addInter
 // Get statistics (admin only)
 router.get('/stats/overview', auth, authorize('admin'), complaintController.getComplaintStats);
 
+
+// Technician marks job done + uploads proof → status: pending_verification
+router.post('/:id/technician-resolve', auth, authorize('technician'), upload.array('images', 3), complaintController.technicianResolve);
+
+// Citizen confirms yes/no + optional photo → triggers admin review
+router.post('/:id/citizen-verify', auth, authorize('citizen'), upload.array('images', 3), complaintController.citizenVerify);
+
+// Admin closes or re-assigns after seeing both responses
+router.post('/:id/admin-close', auth, authorize('admin'), complaintController.adminClose);
+
+
 module.exports = router;

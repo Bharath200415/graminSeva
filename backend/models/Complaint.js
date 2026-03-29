@@ -19,24 +19,12 @@ const complaintSchema = new mongoose.Schema({
   images: [{
     url: String,
     filename: String,
-    uploadedAt: {
-      type: Date,
-      default: Date.now
-    }
+    uploadedAt: { type: Date, default: Date.now }
   }],
   location: {
-    latitude: {
-      type: Number,
-      required: true
-    },
-    longitude: {
-      type: Number,
-      required: true
-    },
-    address: {
-      type: String,
-      trim: true
-    }
+    latitude: { type: Number, required: true },
+    longitude: { type: Number, required: true },
+    address: { type: String, trim: true }
   },
   citizenPhone: {
     type: String,
@@ -47,9 +35,11 @@ const complaintSchema = new mongoose.Schema({
     type: String,
     trim: true
   },
+
+  // ─── Status ───────────────────────────────────────────────────────────────────
   status: {
     type: String,
-    enum: ['submitted', 'assigned', 'in-progress', 'resolved', 'rejected'],
+    enum: ['submitted', 'assigned', 'in-progress', 'pending_verification', 'closed', 'reopened', 'rejected'],
     default: 'submitted'
   },
   priority: {
@@ -57,62 +47,72 @@ const complaintSchema = new mongoose.Schema({
     enum: ['low', 'medium', 'high', 'urgent'],
     default: 'medium'
   },
+
+  // ─── Assignment ───────────────────────────────────────────────────────────────
   assignedTo: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Technician'
   },
-  assignedAt: {
-    type: Date
-  },
-  resolvedAt: {
-    type: Date
-  },
-  resolutionNotes: {
-    type: String,
-    trim: true
-  },
-  resolutionImages: [{
-    url: String,
-    filename: String,
-    uploadedAt: {
-      type: Date,
-      default: Date.now
-    }
+  assignedAt: Date,
+
+  // tracks every (re)assignment with reason
+  assignmentHistory: [{
+    technician: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    assignedAt: { type: Date, default: Date.now },
+    reason: String,   // e.g. "citizen reported unresolved"
   }],
+
+  // ─── Technician resolution ────────────────────────────────────────────────────
+  technicianResolution: {
+    note: { type: String, trim: true },
+    images: [{
+      url: String,
+      filename: String,
+      uploadedAt: { type: Date, default: Date.now }
+    }],
+    resolvedAt: Date,
+  },
+
+  // ─── Citizen verification ─────────────────────────────────────────────────────
+  citizenVerification: {
+    confirmed: Boolean,       // true = fixed, false = not fixed
+    note: { type: String, trim: true },
+    images: [{
+      url: String,
+      filename: String,
+      uploadedAt: { type: Date, default: Date.now }
+    }],
+    respondedAt: Date,
+  },
+
+  // ─── Admin closure ────────────────────────────────────────────────────────────
+  adminClosure: {
+    closedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    action: { type: String, enum: ['closed', 'reassigned'] },
+    note: { type: String, trim: true },
+    actionAt: Date,
+  },
+
+  // ─── Legacy / misc ────────────────────────────────────────────────────────────
   internalNotes: [{
     note: String,
-    addedBy: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User'
-    },
-    addedAt: {
-      type: Date,
-      default: Date.now
-    }
+    addedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    addedAt: { type: Date, default: Date.now }
   }],
   statusHistory: [{
     status: String,
-    changedAt: {
-      type: Date,
-      default: Date.now
-    },
-    changedBy: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User'
-    }
+    changedAt: { type: Date, default: Date.now },
+    changedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
   }],
-  estimatedResolutionTime: {
-    type: Date
-  },
-  actualResolutionTime: {
-    type: Number // in hours
-  }
-}, {
-  timestamps: true
-});
+  estimatedResolutionTime: Date,
+  actualResolutionTime: Number,   // in hours
+  resolvedAt: Date,               // kept for backward compat — also set in pre('save')
+  resolutionNotes: { type: String, trim: true },  // kept for backward compat
 
-// Auto-generate complaint ID (pre-validate so it runs before required check)
-complaintSchema.pre('validate', async function(next) {
+}, { timestamps: true });
+
+// ─── Auto-generate complaint ID ───────────────────────────────────────────────
+complaintSchema.pre('validate', async function (next) {
   if (!this.complaintId) {
     const count = await this.constructor.countDocuments();
     const date = new Date();
@@ -124,19 +124,19 @@ complaintSchema.pre('validate', async function(next) {
   next();
 });
 
-// Calculate actual resolution time when resolved
-complaintSchema.pre('save', function(next) {
-  if (this.isModified('status') && this.status === 'resolved' && !this.resolvedAt) {
+// ─── Auto-compute resolution time on close ────────────────────────────────────
+complaintSchema.pre('save', function (next) {
+  if (this.isModified('status') && this.status === 'closed' && !this.resolvedAt) {
     this.resolvedAt = new Date();
     if (this.createdAt) {
       const timeDiff = this.resolvedAt - this.createdAt;
-      this.actualResolutionTime = Math.round(timeDiff / (1000 * 60 * 60)); // hours
+      this.actualResolutionTime = Math.round(timeDiff / (1000 * 60 * 60));
     }
   }
   next();
 });
 
-// Indexes for faster queries
+// ─── Indexes ──────────────────────────────────────────────────────────────────
 complaintSchema.index({ complaintId: 1 });
 complaintSchema.index({ status: 1, createdAt: -1 });
 complaintSchema.index({ assignedTo: 1, status: 1 });
