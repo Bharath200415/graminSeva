@@ -2,13 +2,13 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const Technician = require('../models/Technician');
 
-// Test OTP from environment
+//test OTP from environment
 const TEST_OTP = process.env.TEST_OTP || '123456';
 
-// Store OTPs temporarily (in production, use Redis)
+// Store OTPs temporarily (in production, will be using Redis)
 const otpStore = new Map();
 
-// Send OTP (mock implementation)
+//send OTP
 exports.sendOTP = async (req, res) => {
   try {
     const { phone } = req.body;
@@ -17,7 +17,7 @@ exports.sendOTP = async (req, res) => {
       return res.status(400).json({ error: 'Invalid phone number' });
     }
 
-    // Store OTP with 5 minute expiry
+    //store OTP with 5 minute expiry
     otpStore.set(phone, {
       otp: TEST_OTP,
       expiresAt: Date.now() + 5 * 60 * 1000
@@ -33,7 +33,7 @@ exports.sendOTP = async (req, res) => {
   }
 };
 
-// Verify OTP and login
+//verify OTP and login
 exports.verifyOTP = async (req, res) => {
   try {
     const { phone, otp, role } = req.body;
@@ -57,7 +57,7 @@ exports.verifyOTP = async (req, res) => {
       return res.status(400).json({ error: 'Invalid OTP' });
     }
 
-    // Clear OTP
+    //clearing otp
     otpStore.delete(phone);
 
     // Find or create user
@@ -76,14 +76,13 @@ exports.verifyOTP = async (req, res) => {
     user.lastLogin = new Date();
     await user.save();
 
-    // Generate JWT token
     const token = jwt.sign(
       { userId: user._id, phone: user.phone, role: user.role },
       process.env.JWT_SECRET,
       { expiresIn: '7d' }
     );
 
-    // Get additional info for technicians
+    //get additional info for technicians
     let technicianData = null;
     if (user.role === 'technician') {
       technicianData = await Technician.findOne({ userId: user._id });
@@ -107,7 +106,7 @@ exports.verifyOTP = async (req, res) => {
   }
 };
 
-// Get current user profile
+//get current user profile
 exports.getProfile = async (req, res) => {
   try {
     const user = await User.findById(req.userId).select('-__v');
@@ -127,7 +126,7 @@ exports.getProfile = async (req, res) => {
   }
 };
 
-// Update user profile
+//update
 exports.updateProfile = async (req, res) => {
   try {
     const { name, email } = req.body;
